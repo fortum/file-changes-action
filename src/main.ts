@@ -101,7 +101,12 @@ async function run(): Promise<void> {
     } else if (isPR) {
       // do PR actions
       if (prNumber != null) {
-        changedFiles = await getChangedPRFiles(repo, client, parseInt(prNumber))
+        try {
+          changedFiles = await getChangedPRFiles(repo, client, parseInt(prNumber))
+        } catch (error) {
+          core.error(`There was an error getting Pull Request change files:${error}`)
+          throw error
+        }
       } else {
         core.setFailed(
           'Could not get pull request number from context, exiting'
@@ -110,12 +115,17 @@ async function run(): Promise<void> {
       }
     } else if (isPush) {
       // do push actions
-      changedFiles = await getChangedPushFiles(
-        repo,
-        client,
-        pushBefore,
-        pushAfter
-      )
+      try {
+        changedFiles = await getChangedPushFiles(
+          repo,
+          client,
+          pushBefore,
+          pushAfter
+        )
+      } catch (error) {
+        core.error(`There was an error getting Push change files:${error}`)
+        throw error
+      }
     } else {
       core.setFailed(
         `Change not initiated by a PR or Push, it was ${
